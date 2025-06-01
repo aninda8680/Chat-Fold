@@ -1,35 +1,42 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './lib/firebase';
 
-function App() {
-  const [count, setCount] = useState(0)
+import AuthPage from './pages/AuthPage';
+import HomePage from './pages/home';
+import User from './pages/User';
+import Navbar from './components/Navbar';
+
+export default function App() {
+  const [user, setUser] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUser(user);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await auth.signOut();
+    setUser(null);
+  };
+
+  if (loading) return <div className="text-center mt-10">Loading...</div>;
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <Router>
+      {user && <Navbar user={user} onLogout={handleLogout} />}
+      <Routes>
+        <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/home" />} />
+        <Route path="/home" element={user ? <HomePage /> : <Navigate to="/auth" />} />
+        <Route path="/user" element={user ? <User user={user} onLogout={handleLogout} /> : <Navigate to="/auth" />} />
+        <Route path="*" element={<Navigate to={user ? "/home" : "/auth"} />} />
+      </Routes>
+    </Router>
+  );
 }
-
-export default App
