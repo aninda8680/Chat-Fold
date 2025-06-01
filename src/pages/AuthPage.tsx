@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   auth,
   provider
@@ -16,10 +17,12 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
   const [showReset, setShowReset] = useState(false);
+  const navigate = useNavigate();
 
   const loginWithGoogle = async () => {
     try {
       await signInWithPopup(auth, provider);
+      navigate("/");
     } catch (error) {
       console.error("Google login failed", error);
       alert("Google login failed");
@@ -37,6 +40,7 @@ export default function AuthPage() {
       }
 
       alert("Login successful");
+      navigate("/");
     } catch (error: any) {
       if (error.code === "auth/wrong-password") {
         alert("Incorrect password.");
@@ -128,7 +132,7 @@ export default function AuthPage() {
 
         <button
           onClick={loginWithGoogle}
-          className="bg-white text-white font-bold px-6 py-3 rounded shadow-lg hover:bg-gray-200 transition"
+          className="bg-white text-white font-bold px-6 py-3 rounded shadow-lg hover:bg-gray-100 transition"
         >
           Sign in with Google
         </button>
